@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Морской бой: Миссия любви</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;700&display=swap');
+
+  :root{
+    --cream:#f6efe3;
+    --cream-2:#efe4d2;
+    --kraft:#d9c3a5;
+    --rose:#c98b8b;
+    --terra:#b56b4a;
+    --sage:#8a9a7b;
+    --deep:#3f4a55;
+    --ink:#4a3f35;
+    --shadow: 0 6px 18px rgba(74,63,53,.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 20% 10%, #fff8ec 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #f0e0cc 0%, transparent 50%),
+      var(--cream);
+    min-height:100vh;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:16px;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; opacity:.35;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(120,100,80,.04) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(120,100,80,.03) 0 1px, transparent 1px 4px);
+  }
+
+  .app{
+    width:100%; max-width:430px;
+    background:var(--cream-2);
+    border-radius:22px;
+    box-shadow:var(--shadow), inset 0 0 0 1px rgba(255,255,255,.6);
+    padding:18px 16px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  .app::after{
+    content:""; position:absolute; top:-6px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:120px; height:26px;
+    background:repeating-linear-gradient(45deg, var(--rose), var(--rose) 6px, #d9a5a5 6px, #d9a5a5 12px);
+    opacity:.7; border-radius:3px;
+  }
+
+  h1{
+    font-family:'Caveat',cursive; font-size:34px; line-height:1;
+    text-align:center; margin:14px 0 4px; color:var(--deep);
+    letter-spacing:.5px;
+  }
+  .subtitle{
+    text-align:center; font-size:13px; color:#8a7a68; margin-bottom:14px;
+    font-style:italic;
+  }
+
+  .screen{display:none; animation:fade .35s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  .btn{
+    font-family:'Nunito',sans-serif; font-weight:700; font-size:15px;
+    border:none; border-radius:14px; padding:13px 18px; cursor:pointer;
+    background:var(--rose); color:#fff; width:100%;
+    box-shadow:0 4px 0 #a86e6e, 0 6px 14px rgba(180,120,120,.3);
+    transition:transform .08s, box-shadow .08s;
+    letter-spacing:.3px;
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 1px 0 #a86e6e;}
+  .btn.secondary{background:var(--sage); box-shadow:0 4px 0 #6b7a5e, 0 6px 14px rgba(120,140,110,.3);}
+  .btn.secondary:active{box-shadow:0 1px 0 #6b7a5e;}
+  .btn.ghost{background:transparent; color:var(--terra); box-shadow:none; border:2px dashed var(--kraft);}
+  .btn.ghost:active{transform:scale(.98);}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+
+  input.field{
+    width:100%; padding:13px 14px; border-radius:12px;
+    border:2px solid var(--kraft); background:#fffdf8;
+    font-family:'Nunito'; font-size:16px; color:var(--ink); outline:none;
+    transition:border .2s;
+  }
+  input.field:focus{border-color:var(--rose);}
+
+  .label{font-size:13px; font-weight:700; color:#8a7a68; margin:12px 0 6px; text-transform:uppercase; letter-spacing:.8px;}
+
+  .map-container {
+    position: relative;
+    margin: 10px 0 15px;
+    padding: 12px;
+    background: #e8d6bd;
+    border-radius: 4px;
+    clip-path: polygon(
+      2% 0%, 98% 1%, 100% 5%, 99% 95%, 96% 100%, 4% 99%, 0% 96%, 1% 4%
+    );
+    box-shadow: 
+      inset 0 0 30px rgba(120, 90, 60, 0.4),
+      0 8px 15px rgba(60, 50, 40, 0.3);
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(200, 180, 150, 0.6) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(200, 180, 150, 0.6) 0%, transparent 20%),
+      repeating-linear-gradient(45deg, rgba(180, 160, 130, 0.1) 0 1px, transparent 1px 4px);
+  }
+
+  .board{
+    display:grid; gap:2px; position:relative; z-index:1;
+    grid-template-columns:repeat(10, 1fr);
+    width:100%;
+  }
+  .cell{
+    aspect-ratio:1/1; border-radius:2px;
+    background:rgba(217, 195, 165, 0.2);
+    border:1px solid rgba(160, 130, 100, 0.4);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; cursor:pointer; position:relative;
+    transition:background .15s;
+    -webkit-user-select:none; user-select:none;
+  }
+  .cell.ship{background:#b59b7a; border-color:#8a6a4a;}
+  .cell.mine{background:var(--terra); border-color:#8f4e33;}
+  .cell.secret{background:var(--sage); border-color:#6b7a5e;}
+  .cell.hit{background:var(--rose); border-color:#a86e6e;}
+  .cell.hit::after{content:"✕"; color:#fff; font-weight:700; font-size:14px;}
+  .cell.miss{background:rgba(255,255,255,.4);}
+  .cell.miss::after{content:"•"; color:var(--deep); font-size:18px; line-height:1;}
+  .cell.sunk{background:#8f6b6b; border-color:#6b4f4f;}
+  .cell.pop{animation:pop .3s ease;}
+  @keyframes pop{0%{transform:scale(.6);} 60%{transform:scale(1.15);} 100%{transform:scale(1);}}
+
+  .turn-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#fffdf8; border:2px dashed var(--kraft);
+    border-radius:14px; padding:10px 14px; margin-bottom:10px;
+  }
+  .turn-name{font-weight:700; font-size:15px; color:var(--deep);}
+  .stars{font-family:'Caveat'; font-size:22px; color:var(--terra);}
+  .target-label{font-size:13px; font-weight:700; color:#8a7a68; text-align:center; margin:6px 0;}
+
+  .modal-back{
+    position:fixed; inset:0; background:rgba(60,50,40,.45);
+    display:none; align-items:center; justify-content:center; padding:18px; z-index:50;
+    backdrop-filter:blur(2px);
+  }
+  .modal-back.show{display:flex;}
+  .envelope{width:100%; max-width:380px; position:relative; animation:envelopeOpen .45s ease;}
+  @keyframes envelopeOpen{from{transform:scale(.8) rotate(-2deg); opacity:0;} to{transform:none; opacity:1;}}
+  .envelope .flap{
+    position:absolute; top:-2px; left:0; right:0; height:60px;
+    background:linear-gradient(180deg,#e8d6bd,#d9c3a5);
+    clip-path:polygon(0 0,100% 0,50% 100%);
+    border-radius:14px 14px 0 0; z-index:1;
+  }
+  .card-paper{
+    background:#fffdf8; border-radius:6px 6px 16px 16px;
+    padding:28px 20px 20px; position:relative; z-index:0;
+    box-shadow:0 10px 30px rgba(60,50,40,.3);
+    transform:rotate(-1deg); border:1px solid #e8dcc8;
+    display: flex; flex-direction: column;
+  }
+  .card-paper::before{
+    content:"❤"; position:absolute; top:-14px; right:14px;
+    width:38px; height:38px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #d98b8b, #a84646);
+    color:#fff; font-size:16px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 8px rgba(140,50,50,.4); transform:rotate(8deg);
+  }
+  .task-tag{
+    display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.8px; color:#fff; background:var(--sage);
+    padding:4px 10px; border-radius:20px; margin-bottom:10px;
+    align-self: flex-start;
+  }
+  .task-tag.mine{background:var(--terra);}
+  .task-text{font-family:'Caveat',cursive; font-size:26px; line-height:1.15; color:var(--deep); margin:6px 0 18px;}
+  .modal-actions{display:flex; flex-direction:column; gap:10px;}
+  
+  .task-executor {
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    color: #9a8a78;
+    margin-top: 10px;
+    align-self: flex-start;
+  }
+
+  .level-btn{
+    display:flex; align-items:center; gap:12px; text-align:left;
+    padding:16px; border-radius:16px; border:2px solid var(--kraft);
+    background:#fffdf8; cursor:pointer; margin-bottom:10px;
+    transition:transform .1s, border-color .2s;
+  }
+  .level-btn:active{transform:scale(.98);}
+  .level-btn.selected{border-color:var(--rose); background:#fff5f5;}
+  .level-icon{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+    background:var(--cream-2);
+  }
+  .level-title{font-weight:700; font-size:16px; color:var(--deep);}
+  .level-desc{font-size:12px; color:#8a7a68; margin-top:2px;}
+
+  .place-info{
+    background:#fffdf8; border-radius:12px; padding:10px 14px;
+    font-size:13px; color:#7a6a58; margin-bottom:8px;
+    border-left:4px solid var(--rose);
+  }
+  .place-info b{color:var(--deep);}
+
+  .controls{display:flex; gap:10px; margin-bottom:10px;}
+  .controls .btn{width:auto; flex:1; padding:10px 12px; font-size:14px;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--deep); color:#fff; padding:12px 20px; border-radius:14px;
+    font-weight:700; font-size:14px; opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s; z-index:99;
+    box-shadow:0 8px 20px rgba(0,0,0,.3);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .final{text-align:center; padding:20px 10px;}
+  .final h2{font-family:'Caveat'; font-size:32px; color:var(--terra); margin:10px 0; line-height: 1.1;}
+  .final .star-emoji{
+    font-size:90px; line-height:1; margin-bottom:10px;
+    animation:pop .5s ease;
+  }
+
+  .hint{font-size:12px; color:#9a8a78; text-align:center; margin-top:10px; line-height:1.4;}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Морской бой</h1>
+  <div class="subtitle">Миссия любви</div>
+
+  <!-- ЭКРАН 1: ИМЕНА -->
+  <section id="screen-names" class="screen active">
+    <div class="label">Игрок 1</div>
+    <input id="name1" class="field" placeholder="Имя первого игрока" maxlength="20">
+    <div class="label">Игрок 2</div>
+    <input id="name2" class="field" placeholder="Имя второго игрока" maxlength="20">
+    <div style="height:18px"></div>
+    <button class="btn" id="to-placement">Дальше →</button>
+    <div class="hint">Игроки по очереди расставят корабли.</div>
+  </section>
+
+  <!-- ЭКРАН 2: РАССТАНОВКА -->
+  <section id="screen-place" class="screen">
+    <div class="turn-bar">
+      <span class="turn-name" id="place-player">Игрок 1</span>
+      <span class="stars" id="place-step">Расстановка</span>
+    </div>
+    <div class="place-info" id="place-info">…</div>
+    
+    <div class="map-container">
+      <div class="board" id="board-place"></div>
+    </div>
+    
+    <div class="controls">
+      <button class="btn ghost" id="rotate-btn">↻ Повернуть</button>
+      <button class="btn ghost" id="random-btn">🎲 Случайно</button>
+    </div>
+    
+    <button class="btn" id="confirm-place" disabled>Подтвердить</button>
+    <div class="hint">Корабли: 1 линкор, 2 крейсера, 3 эсминца, 4 катера, 1 мина, 1 секретный.</div>
+  </section>
+
+  <!-- ЭКРАН 3: УРОВЕНЬ -->
+  <section id="screen-level" class="screen">
+    <div class="label" style="text-align:center;">Уровень заданий</div>
+    <div id="levels"></div>
+    <button class="btn" id="start-game" disabled>Начать игру</button>
+  </section>
+
+  <!-- ЭКРАН 4: ИГРА -->
+  <section id="screen-game" class="screen">
+    <div class="turn-bar">
+      <span class="turn-name" id="turn-name">Ход: —</span>
+      <span class="stars" id="stars-display">★ 0 : 0 ★</span>
+    </div>
+    <div class="target-label" id="target-label">Поле соперника — выбери клетку</div>
+    
+    <div class="map-container">
+      <div class="board" id="board-target"></div>
+    </div>
+    
+    <div class="hint" id="game-hint">Нажимай на клетки. Попал — выполняй задание!</div>
+  </section>
+
+  <!-- ЭКРАН 5: ФИНАЛ -->
+  <section id="screen-final" class="screen">
+    <div class="final">
+      <div class="star-emoji">⭐</div>
+      <h2 id="winner-name">Победа!</h2>
+      <p id="final-text" style="color:#7a6a58;">Все корабли потоплены.</p>
+      <div style="height:20px"></div>
+      <button class="btn" id="play-again">Играть снова 🔄</button>
+    </div>
+  </section>
+</div>
+
+<!-- МОДАЛКА -->
+<div class="modal-back" id="modal-back">
+  <div class="envelope">
+    <div class="flap"></div>
+    <div class="card-paper">
+      <span class="task-tag" id="task-tag">Задание</span>
+      <div class="task-text" id="task-text">…</div>
+      <div class="task-executor" id="task-executor">Выполняет: Игрок</div>
+      
+      <div class="modal-actions" style="margin-top: 15px;">
+        <button class="btn secondary" id="btn-done">Выполнено! ★</button>
+        <button class="btn ghost" id="btn-replace">Заменить ↻</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TASKS = {
+  "Мило": {
+    "Милые": ["Обнять партнёра и не отпускать ровно 30 секунд.", "Сказать партнёру 3 комплимента.", "Сделать партнёру массаж головы в течение 2 минут.", "Сказать друг другу «Я тебя люблю»."],
+    "Смешные": ["Изобразить любое действие или слово партнёра — а он должен угадать.", "Сделать самое смешное селфи вдвоём и поставить на аватарку в течение часа."],
+    "Заботливые": ["Принести партнёру стакан воды или его любимый напиток.", "Сделать партнёру лёгкий массаж плеч и шеи.", "Укрыть партнёра пледом и принести что-нибудь вкусненькое.", "Написать партнёру записку с тёплыми словами и спрятать в карман.", "Взять на себя одно домашнее дело партнёра на сегодня."],
+    "Вопросы": ["Какой твой самый любимый момент, проведённый со мной?", "Что я делаю такого, что всегда заставляет тебя улыбаться?", "Каким ты видишь наш идеальный выходной?", "За что ты больше всего ценишь меня?", "О чём ты мечтаешь, но редко говоришь вслух?"]
+  },
+  "Романтично": {
+    "Романтические": ["Признаться в любви, глядя партнёру в глаза, не используя слово «люблю».", "Станцевать медленный танец под любую песню, которая играет на фоне.", "Поцеловать партнёра в самое неожиданное и нежное место.", "Написать партнёру короткое любовное письмо и прочитать его вслух."],
+    "Игровые": ["Угадай, что я рисую на твоей спине пальцем (сердечко, звезду, букву)."],
+    "Смешные": ["Изобразить, как ты ревнуешь, но в комичной, преувеличенной форме.", "Придумать смешное прозвище для партнёра и называть его так до конца игры.", "Станцевать соблазнительный (но смешной) танец под любую песню."]
+  },
+  "Дерзко": {
+    "Дерзкие": ["Поцеловать партнёра в шею и задержаться там на 5 секунд.", "Снять с партнёра одну вещь (по выбору того, кто выполняет задание).", "Станцевать для партнёра эротичный танец (можно под музыку, 30 секунд)."],
+    "Вопросы для Дерзко": ["Какая моя черта характера или привычка тебя больше всего заводит?", "О чём ты фантазируешь, когда мы не вместе?", "Что бы ты хотел(а), чтобы я сделал(а) прямо сейчас?", "Какую самую смелую вещь ты хотел(а) бы попробовать с нами?", "Что тебя возбуждает во мне больше всего?"]
+  }
+};
+
+const LEVEL_MAP = {
+  "Мило":       { cats:["Милые","Смешные","Заботливые","Вопросы"], icon:"🌿", desc:"Тепло, забота и лёгкий смех" },
+  "Романтично": { cats:["Романтические","Игровые","Смешные"],        icon:"🌹", desc:"Чувственно, с флиртом и играми" },
+  "Дерзко":     { cats:["Дерзкие","Вопросы для Дерзко"],             icon:"🔥", desc:"Смело и провокационно" }
+};
+
+const SECRET_TASKS = ["Тайное задание: скажи партнёру 5 комплиментов подряд без пауз.", "Тайное задание: обними партнёра и прошепчи что-то приятное на ухо.", "Тайное задание: признайся в самом неожиданном чувстве к партнёру.", "Тайное задание: придумай совместную мечту на этот год.", "Тайное задание: станцуй 15 секунд без музыки, глядя партнёру в глаза."];
+const MINE_TASKS = ["Мина! Ты сам(а) выполняешь задание: расскажи партнёру о самом смешном вашем моменте.", "Мина! Твоё задание: сделай партнёру искренний комплимент вслух.", "Мина! Ты попал(а) на мину — обними партнёра 20 секунд.", "Мина! Твоё задание: спой одну строчку из песни, которая ассоциируется с партнёром."];
+
+const FLEET = [
+  { name:"Линкор",  size:4, count:1, type:"ship" },
+  { name:"Крейсер", size:3, count:2, type:"ship" },
+  { name:"Эсминец", size:2, count:3, type:"ship" },
+  { name:"Катер",   size:1, count:4, type:"ship" },
+  { name:"Мина",    size:1, count:1, type:"mine" },
+  { name:"Секретный корабль", size:1, count:1, type:"secret" }
+];
+
+let state = { names: ["Игрок 1","Игрок 2"], level: "Мило", players: [null,null], current: 0 };
+
+function makeBoard(){
+  return Array.from({length:10}, () => Array.from({length:10}, () => ({
+    ship:false, mine:false, secret:false, hit:false, miss:false, shipId:null
+  })));
+}
+
+function makePlayer(name){
+  return { name, board: makeBoard(), ships: [], stars: 0 };
+}
+
+const $ = id => document.getElementById(id);
+const screens = document.querySelectorAll('.screen');
+function showScreen(id){ screens.forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* =========================================================
+   ЭКРАН ИМЁН
+   ========================================================= */
+$('to-placement').addEventListener('click', () => {
+  const n1 = $('name1').value.trim() || 'Игрок 1';
+  const n2 = $('name2').value.trim() || 'Игрок 2';
+  state.names = [n1, n2];
+  state.players = [makePlayer(n1), makePlayer(n2)];
+  state.current = 0;
+  startPlacement();
+});
+
+/* =========================================================
+   РАССТАНОВКА
+   ========================================================= */
+let placeState = null;
+
+function buildFleetQueue(){
+  const q = [];
+  FLEET.forEach(f => { for(let i=0;i<f.count;i++) q.push({ type:f.type, size:f.size, name:f.name }); });
+  return q;
+}
+
+function startPlacement(){
+  const p = state.players[state.current];
+  placeState = { playerIndex: state.current, fleetQueue: buildFleetQueue(), horizontal: true };
+  $('place-player').textContent = p.name + " · расстановка";
+  renderPlaceBoard();
+  updatePlaceInfo();
+  $('confirm-place').disabled = true;
+  showScreen('screen-place');
+}
+
+function updatePlaceInfo(){
+  const s = placeState.fleetQueue[0];
+  const info = $('place-info');
+  if(!s){
+    info.innerHTML = "<b>Всё готово!</b> Нажми «Подтвердить».";
+    $('confirm-place').disabled = false;
+    return;
+  }
+  const label = s.type === 'mine' ? 'Мина' : s.type === 'secret' ? 'Секретный корабль' : s.name;
+  info.innerHTML = `<b>${label} (${s.size})</b> · тапни по клетке.`;
+  $('confirm-place').disabled = true;
+}
+
+function renderPlaceBoard(){
+  const board = state.players[placeState.playerIndex].board;
+  const b = $('board-place');
+  b.innerHTML = '';
+  for(let r=0;r<10;r++){
+    for(let c=0;c<10;c++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const d = board[r][c];
+      if(d.ship) cell.classList.add('ship');
+      if(d.mine) cell.classList.add('mine');
+      if(d.secret) cell.classList.add('secret');
+      
+      cell.addEventListener('click', (e) => {
+        e.preventDefault();
+        placeAt(r,c);
+      });
+      b.appendChild(cell);
+    }
+  }
+}
+
+function getShipCells(r,c){
+  const s = placeState.fleetQueue[0];
+  if(!s) return null;
+  const cells = [];
+  for(let i=0;i<s.size;i++){
+    const rr = placeState.horizontal ? r : r+i;
+    const cc = placeState.horizontal ? c+i : c;
+    if(rr>9 || cc>9) return null;
+    cells.push({r:rr, c:cc});
+  }
+  return cells;
+}
+
+function canPlace(cells){
+  if(!cells) return false;
+  const board = state.players[placeState.playerIndex].board;
+  for(const {r,c} of cells){
+    if(board[r][c].ship || board[r][c].mine || board[r][c].secret) return false;
+    for(let dr=-1;dr<=1;dr++){
+      for(let dc=-1;dc<=1;dc++){
+        const rr=r+dr, cc=c+dc;
+        if(rr>=0 && rr<10 && cc>=0 && cc<10){
+          const n = board[rr][cc];
+          if(n.ship || n.mine || n.secret) return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+function placeAt(r,c){
+  const s = placeState.fleetQueue[0];
+  if(!s) return;
+  const cells = getShipCells(r,c);
+  
+  if(!canPlace(cells)){ 
+    toast("Сюда нельзя — занято или рядом объект"); 
+    return; 
+  }
+
+  const board = state.players[placeState.playerIndex].board;
+
+  if(s.type === 'mine'){
+    board[r][c].mine = true;
+  } else if(s.type === 'secret'){
+    board[r][c].secret = true;
+  } else {
+    const shipId = 's-' + placeState.playerIndex + '-' + Date.now() + Math.random();
+    const shipObj = { id: shipId, type:'ship', size:s.size, cells: cells.map(x=>({...x})), sunk:false };
+    cells.forEach(({r:rr,c:cc}) => {
+      board[rr][cc].ship = true;
+      board[rr][cc].shipId = shipId;
+    });
+    state.players[placeState.playerIndex].ships.push(shipObj);
+  }
+
+  placeState.fleetQueue.shift();
+  renderPlaceBoard();
+  updatePlaceInfo();
+}
+
+$('rotate-btn').addEventListener('click', () => {
+  if(!placeState) return;
+  placeState.horizontal = !placeState.horizontal;
+  toast(placeState.horizontal ? "Горизонтально ↔" : "Вертикально ↕");
+});
+
+$('random-btn').addEventListener('click', () => {
+  if(!placeState) return;
+  const board = state.players[placeState.playerIndex].board;
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++) {
+    board[r][c] = { ship:false, mine:false, secret:false, hit:false, miss:false, shipId:null };
+  }
+  state.players[placeState.playerIndex].ships = [];
+  placeState.fleetQueue = buildFleetQueue();
+  
+  let attempts = 0;
+  const maxAttempts = 20000;
+  while(placeState.fleetQueue.length > 0 && attempts < maxAttempts){
+    const s = placeState.fleetQueue[0];
+    placeState.horizontal = Math.random() > 0.5;
+    const r = Math.floor(Math.random() * 10);
+    const c = Math.floor(Math.random() * 10);
+    const cells = getShipCells(r,c);
+    
+    if(canPlace(cells)){
+      if(s.type === 'mine') board[r][c].mine = true;
+      else if(s.type === 'secret') board[r][c].secret = true;
+      else {
+        const shipId = 's-' + placeState.playerIndex + '-' + Date.now() + Math.random();
+        const shipObj = { id: shipId, type:'ship', size:s.size, cells: cells.map(x=>({...x})), sunk:false };
+        cells.forEach(({r:rr,c:cc}) => { board[rr][cc].ship = true; board[rr][cc].shipId = shipId; });
+        state.players[placeState.playerIndex].ships.push(shipObj);
+      }
+      placeState.fleetQueue.shift();
+    }
+    attempts++;
+  }
+  
+  if(placeState.fleetQueue.length > 0){
+    toast("Не удалось расставить случайно, попробуйте ещё раз");
+    return;
+  }
+
+  renderPlaceBoard();
+  updatePlaceInfo();
+  toast("Расставлено случайно!");
+});
+
+$('confirm-place').addEventListener('click', () => {
+  state.current++;
+  if(state.current === 1){
+    startPlacement();
+  } else {
+    state.current = 0;
+    showLevelSelection();
+  }
+});
+
+/* =========================================================
+   ВЫБОР УРОВНЯ
+   ========================================================= */
+function showLevelSelection(){
+  const wrap = $('levels');
+  wrap.innerHTML = '';
+  Object.keys(LEVEL_MAP).forEach(lvl => {
+    const cfg = LEVEL_MAP[lvl];
+    const div = document.createElement('div');
+    div.className = 'level-btn';
+    div.innerHTML = `
+      <div class="level-icon">${cfg.icon}</div>
+      <div>
+        <div class="level-title">${lvl}</div>
+        <div class="level-desc">${cfg.desc}</div>
+      </div>`;
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.level-btn').forEach(x => x.classList.remove('selected'));
+      div.classList.add('selected');
+      state.level = lvl;
+      $('start-game').disabled = false;
+    });
+    wrap.appendChild(div);
+  });
+  showScreen('screen-level');
+}
+
+$('start-game').addEventListener('click', () => {
+  state.current = 0;
+  startGame();
+});
+
+/* =========================================================
+   ИГРА
+   ========================================================= */
+let gameState = { targetBoard: null, ownBoard: null, targetPlayer: 1, ownPlayer: 0, busy: false };
+let lastTaskIndex = {};
+
+function startGame(){
+  state.players.forEach(p => { p.stars = 0; });
+  gameState.busy = false;
+  lastTaskIndex = {};
+  updateTurnUI();
+  renderGameBoards();
+  showScreen('screen-game');
+}
+
+function updateTurnUI(){
+  const cur = state.players[state.current];
+  $('turn-name').textContent = "Ход: " + cur.name;
+  $('stars-display').textContent = `★ ${state.players[0].stars} : ${state.players[1].stars} ★`;
+}
+
+function renderGameBoards(){
+  const me = state.current;
+  const enemy = 1 - me;
+  gameState.ownBoard = state.players[me].board;
+  gameState.targetBoard = state.players[enemy].board;
+  gameState.ownPlayer = me;
+  gameState.targetPlayer = enemy;
+  
+  $('target-label').textContent = "Поле " + state.players[enemy].name + " — выбери клетку";
+  renderBoard($('board-target'), gameState.targetBoard, true);
+}
+
+function renderBoard(el, board, isTarget){
+  el.innerHTML = '';
+  for(let r=0;r<10;r++){
+    for(let c=0;c<10;c++){
+      const d = board[r][c];
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+
+      if(isTarget){
+        if(d.hit) cell.classList.add('hit');
+        else if(d.miss) cell.classList.add('miss');
+      }
+
+      if(isTarget && !d.hit && !d.miss && !gameState.busy){
+        cell.addEventListener('click', (e) => { e.preventDefault(); fireAt(r,c); });
+      }
+      el.appendChild(cell);
+    }
+  }
+}
+
+function fireAt(r,c){
+  if(gameState.busy) return;
+  const board = gameState.targetBoard;
+  const d = board[r][c];
+  if(d.hit || d.miss) return;
+
+  if(d.ship || d.mine || d.secret){
+    d.hit = true;
+    toast("Попадание!");
+
+    if(d.mine){
+      gameState.busy = true;
+      showTask(MINE_TASKS[Math.floor(Math.random()*MINE_TASKS.length)], "Мина", true);
+      return;
+    }
+    if(d.secret){
+      gameState.busy = true;
+      showTask(SECRET_TASKS[Math.floor(Math.random()*SECRET_TASKS.length)], "Секретный корабль", false);
+      return;
+    }
+
+    const enemyShips = state.players[gameState.targetPlayer].ships;
+    const ship = enemyShips.find(s => s.id === d.shipId);
+    
+    if(ship && !ship.sunk && ship.cells.every(cc => board[cc.r][cc.c].hit)){
+      ship.sunk = true;
+      gameState.busy = true;
+      const task = pickTask();
+      showTask(task.text, task.cat, false);
+      return;
+    }
+    
+    // Попадание, но корабль ещё не потоплен — игрок ходит снова
+    renderGameBoards();
+
+  } else {
+    d.miss = true;
+    toast("Мимо!");
+    renderGameBoards();
+    setTimeout(() => {
+      if(checkWin()) return;
+      state.current = 1 - state.current;
+      updateTurnUI();
+      renderGameBoards();
+    }, 700);
+  }
+}
+
+function pickTask(){
+  const lvl = state.level;
+  const cats = LEVEL_MAP[lvl].cats;
+  const cat = cats[Math.floor(Math.random()*cats.length)];
+  const list = TASKS[lvl][cat];
+  let idx;
+  do {
+    idx = Math.floor(Math.random()*list.length);
+  } while(list.length > 1 && lastTaskIndex[cat] === idx);
+  lastTaskIndex[cat] = idx;
+  return { text: list[idx], cat };
+}
+
+/* =========================================================
+   МОДАЛКА
+   ========================================================= */
+let modalTask = null;
+
+function showTask(text, tag, isMine){
+  modalTask = { text, tag, isMine };
+  $('task-tag').textContent = tag;
+  $('task-tag').className = 'task-tag' + (isMine ? ' mine' : '');
+  $('task-text').textContent = text;
+  
+  const executorName = isMine ? state.players[state.current].name : state.players[1 - state.current].name;
+  $('task-executor').textContent = "Выполняет: " + executorName;
+
+  $('btn-replace').style.display = 'block';
+  $('modal-back').classList.add('show');
+}
+
+$('btn-replace').addEventListener('click', () => {
+  if(!modalTask) return;
+  let task;
+  if(modalTask.isMine){
+    task = { text: MINE_TASKS[Math.floor(Math.random()*MINE_TASKS.length)], cat: "Мина" };
+  } else {
+    task = pickTask();
+  }
+  modalTask.text = task.text;
+  modalTask.tag = task.cat;
+  $('task-tag').textContent = task.cat;
+  $('task-text').textContent = task.text;
+});
+
+$('btn-done').addEventListener('click', () => {
+  $('modal-back').classList.remove('show');
+  
+  const performer = modalTask.isMine ? state.current : (1 - state.current);
+  state.players[performer].stars++;
+  modalTask = null;
+
+  if(checkWin()) { 
+    gameState.busy = false; 
+    return; 
+  }
+
+  state.current = 1 - state.current;
+  updateTurnUI();
+  gameState.busy = false; 
+  renderGameBoards();
+});
+
+/* =========================================================
+   ПОБЕДА
+   ========================================================= */
+function checkWin(){
+  const enemy = gameState.targetPlayer;
+  if(enemy === undefined) return false;
+  const enemyShips = state.players[enemy].ships;
+  const allSunk = enemyShips.length > 0 && enemyShips.every(s => s.sunk);
+  if(allSunk){
+    endGame(state.current);
+    return true;
+  }
+  return false;
+}
+
+function endGame(winnerIdx){
+  const w = state.players[winnerIdx];
+  $('winner-name').textContent = `${w.name}, поздравляю, ты победитель!!!`;
+  $('final-text').textContent = `Все корабли потоплены. Звёзд: ${state.players[0].stars} : ${state.players[1].stars}.`;
+  gameState.busy = true;
+  showScreen('screen-final');
+}
+
+$('play-again').addEventListener('click', () => {
+  $('modal-back').classList.remove('show');
+  gameState = { targetBoard: null, ownBoard: null, targetPlayer: 1, ownPlayer: 0, busy: false };
+  state.players = [makePlayer(state.names[0]), makePlayer(state.names[1])];
+  state.current = 0;
+  startPlacement();
+});
+</script>
+</body>
+</html>
